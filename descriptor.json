@@ -1,0 +1,86 @@
+{
+  "command-line": "python wrapper.py CYTOMINE_HOST CYTOMINE_PUBLIC_KEY CYTOMINE_PRIVATE_KEY CYTOMINE_ID_PROJECT CYTOMINE_ID_SOFTWARE CYTOMINE_ID_JOB THRESHOLD",
+  "inputs": [
+    {
+      "name": "Cytomine host",
+      "description": "Cytomine server hostname",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_host",
+      "type": "String",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine public key",
+      "description": "Cytomine public key",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_public_key",
+      "type": "String",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine private key",
+      "description": "Cytomine private key",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_private_key",
+      "type": "String",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine project id",
+      "description": "Cytomine project id",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_id_project",
+      "type": "Number",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Cytomine software id",
+      "description": "Cytomine software id",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_id_software",
+      "type": "Number",
+      "command-line-flag": "--@id"
+    },
+    {
+      "name": "Training job identifier",
+      "description": "Identifier of the training job. The job should have the trained model attached (as a \"model.pth\" attached file).",
+      "set-by-server": false,
+      "value-key": "@ID",
+      "optional": false,
+      "id": "cytomine_id_job",
+      "type": "Domain",
+      "uri": "/api/job.json?project=$currentProject$",
+      "uri-sort-attribute": "softwareName",
+      "uri-print-attribute": "softwareName",
+      "command-line-flag": "--@id"
+    },
+    {
+      "default-value": 0.5,
+      "name": "Threshold",
+      "description": "Value for thresholding the probability map",
+      "set-by-server": true,
+      "value-key": "@ID",
+      "optional": true,
+      "id": "threshold",
+      "type": "Number",
+      "command-line-flag": "--@id"
+    }
+  ],
+  "name": "Segment-ML-UNet-Binary-Pred",
+  "description": "UNet binary segmentation - inference software (on normal images)",
+  "schema-version": "cytomine-0.1",
+  "container-image": {
+    "image": "cytomineuliege/s_segment-ml-unet-binary-pred",
+    "type": "singularity"
+  }
+}

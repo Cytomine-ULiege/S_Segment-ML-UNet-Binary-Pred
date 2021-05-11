@@ -74,7 +74,7 @@ def main(argv):
         net.eval()
 
         annotations = AnnotationCollection()
-        for image, filepath in cj.monitor(list(zip(images, filepaths))[:5], start=20, end=75, period=0.05, prefix="Apply UNet to input images"):
+        for image, filepath in cj.monitor(zip(images, filepaths), start=20, end=75, period=0.05, prefix="Apply UNet to input images"):
             mask = predict_img(net, filepath, device=device, out_threshold=cj.parameters.threshold)
             slices = mask_to_objects_2d(mask)
 

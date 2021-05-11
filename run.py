@@ -42,48 +42,14 @@ def load_model(filepath):
     return net
 
 
-class Monitor(object):
-    def __init__(self, job, iterable, start=0, end=100, period=None, prefix=None):
-        self._job = job
-        self._start = start
-        self._end = end
-        self._update_period = period
-        self._iterable = iterable
-        self._prefix = prefix
-
-    def update(self, *args, **kwargs):
-        return self._job.job.update(*args, **kwargs)
-
-    def _get_period(self, n_iter):
-        """Return integer period given a maximum number of iteration """
-        if self._update_period is None:
-            return None
-        if isinstance(self._update_period, float):
-            return max(int(self._update_period * n_iter), 1)
-        return self._update_period
-
-    def _relative_progress(self, ratio):
-        return int(self._start + (self._end - self._start) * ratio)
-
-    def __iter__(self):
-        total = len(self)
-        for i, v in enumerate(self._iterable):
-            period = self._get_period(total)
-            if period is None or i % period == 0:
-                statusComment = "{} ({}/{}).".format(self._prefix, i + 1, len(self))
-                relative_progress = self._relative_progress(i / float(total))
-                self._job.job.update(progress=relative_progress, statusComment=statusComment)
-            yield v
-
-    def __len__(self):
-        return len(list(self._iterable))
-
-
 def main(argv):
     with CytomineJob.from_cli(argv) as cj:
         working_path = str(Path.home())
         data_path = os.path.join(working_path, "data")
         model_path = os.path.join(working_path, "model")
+
+        os.makedirs(data_path, exist_ok=True)
+        os.makedirs(model_path, exist_ok=True)
 
         cj.job.update(status=Job.RUNNING, progress=0, statusComment="Download data...")
 
@@ -100,7 +66,7 @@ def main(argv):
         train_job = Job().fetch(cj.parameters.cytomine_id_job)
         attached_files = AttachedFileCollection(train_job).fetch()
         model_file = attached_files.find_by_attribute("filename", "model.pth")
-        model_filepath = os.path.join(model_path, "model.joblib")
+        model_filepath = os.path.join(model_path, "model.pth")
         model_file.download(model_filepath, override=True)
         net = load_model(model_filepath)
         device = torch.device("cpu")
@@ -108,18 +74,18 @@ def main(argv):
         net.eval()
 
         annotations = AnnotationCollection()
-        for image, filpath in Monitor(cj, zip(images, filepaths), start=20, end=75, period=0.05, prefix="Apply UNet to input images"):
+        for image, filepath in cj.monitor(zip(images, filepaths), start=20, end=75, period=0.05, prefix="Apply UNet to input images"):
             mask = predict_img(net, filepath, device=device, out_threshold=cj.parameters.threshold)
-            objects = mask_to_objects_2d(mask)
+            slices = mask_to_objects_2d(mask)
 
             annotations.extend([
-                Annotation(location=affine_transform(o, [1, 0, 0, -1, 0, image.height]),
+                Annotation(location=affine_transform(poly, [1, 0, 0, -1, 0, image.height]),
                            id_image=image.id,
                            id_project=cj.parameters.cytomine_id_project)
-                for o in objects
+                for poly, _ in slices
             ])
 
-            del mask, objects
+            del mask, slices
 
         # 4. Create and upload annotations
         cj.job.update(progress=70, statusComment="Uploading extracted annotation...")

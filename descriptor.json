@@ -68,7 +68,7 @@
       "default-value": 0.5,
       "name": "Threshold",
       "description": "Value for thresholding the probability map",
-      "set-by-server": true,
+      "set-by-server": false,
       "value-key": "@ID",
       "optional": true,
       "id": "threshold",
